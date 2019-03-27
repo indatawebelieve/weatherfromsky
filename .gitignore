@@ -1,0 +1,5 @@
+/output/
+__pycache__
+states.csv
+appid.txt
+**/.DS_Store

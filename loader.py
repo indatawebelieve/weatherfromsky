@@ -21,8 +21,9 @@ import datetime
 
 # count amount of recorded states
 next_index = 0
-if os.path.isfile('./input/states.csv'):
-	with open('./input/states.csv', 'r') as f:
+states_file = os.path.join('.', 'input', 'states.csv')
+if os.path.isfile(states_file):
+	with open(states_file, 'r') as f:
 		next_index = len(f.readlines())
 
 # avoid having appid on repository
@@ -30,8 +31,27 @@ appid = ''
 with open('appid.txt', 'r') as f:
 	appid = f.read()
 
+imgs_dir = os.path.join('.', 'input', 'imgs')
+
+def save_webcamshot(folder, mirror=False):
+    cam = cv2.VideoCapture(0)
+    time.sleep(0.2)
+
+    ret_val, img = cam.read()
+
+    if mirror: 
+        img = cv2.flip(img, 1)
+
+    label_folder = os.path.join(imgs_dir, folder)
+
+    # Create directory if not exists
+    if not os.path.exists(label_folder):
+    	os.mkdir(label_folder)
+
+    cv2.imwrite(os.path.join(label_folder, str(next_index) + '.jpg'), img)
+
 # Download weather information
-def download_weather():
+def register_weather():
 	content = urlopen('http://api.openweathermap.org/data/2.5/weather?id=3838583&appid=' 
 		+ appid).read()
 	cont = json.loads(content)
@@ -45,25 +65,13 @@ def download_weather():
 	time_now = datetime.datetime.now()
 
 	# append obtained information to file
-	with open('./input/states.csv', 'a+') as f:
+	with open(os.path.join('.', 'input', 'states.csv'), 'a+') as f:
 		f.write(str(next_index) + '\t' + time_now.strftime("%Y-%m-%d") + '\t' + 
 			time_now.strftime('%H:%M:%S') + '\t' + str(weather_id) + '\t' + 
 			weather_desc + '\t' + 
 			str(temperature-273.15) + '\t' + # Conversion from Kelvin to Celsius
 			str(pressure) + '\t' + str(humidity) + '\t' + str(wind_speed) + '\n') 
 
-def save_webcamshot(mirror=False):
-    cam = cv2.VideoCapture(0)
-    time.sleep(0.2)
+	save_webcamshot(weather_desc)
 
-    ret_val, img = cam.read()
-
-    if mirror: 
-        img = cv2.flip(img, 1)
-
-    cv2.imwrite('./input/imgs/' + str(next_index) + '.jpg', img)
-
-    cv2.destroyAllWindows()
-
-download_weather()
-save_webcamshot(True)
+register_weather()
